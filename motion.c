@@ -207,16 +207,16 @@ static void image_save_as_preview(struct context *cnt, struct image_data *img)
 
         if (cnt->locate_motion_style == LOCATE_BOX) {
             alg_draw_location(&img->location, &cnt->imgs, cnt->imgs.width, cnt->imgs.preview_image.image,
-                              LOCATE_BOX, LOCATE_NORMAL, cnt->process_thisframe);
+                              LOCATE_BOX, LOCATE_NORMAL, cnt->process_thisframe, 0);
         } else if (cnt->locate_motion_style == LOCATE_REDBOX) {
             alg_draw_red_location(&img->location, &cnt->imgs, cnt->imgs.width, cnt->imgs.preview_image.image,
-                                  LOCATE_REDBOX, LOCATE_NORMAL, cnt->process_thisframe);
+                                  LOCATE_REDBOX, LOCATE_NORMAL, cnt->process_thisframe, 0);
         } else if (cnt->locate_motion_style == LOCATE_CROSS) {
             alg_draw_location(&img->location, &cnt->imgs, cnt->imgs.width, cnt->imgs.preview_image.image,
-                              LOCATE_CROSS, LOCATE_NORMAL, cnt->process_thisframe);
+                              LOCATE_CROSS, LOCATE_NORMAL, cnt->process_thisframe, cnt->imgs.preview_image.total_labels);
         } else if (cnt->locate_motion_style == LOCATE_REDCROSS) {
             alg_draw_red_location(&img->location, &cnt->imgs, cnt->imgs.width, cnt->imgs.preview_image.image,
-                                  LOCATE_REDCROSS, LOCATE_NORMAL, cnt->process_thisframe);
+                                  LOCATE_REDCROSS, LOCATE_NORMAL, cnt->process_thisframe,  cnt->imgs.preview_image.total_labels);
         }     
     }
 }
@@ -416,19 +416,18 @@ static void motion_detected(struct context *cnt, int dev, struct image_data *img
 
     /* Draw location */
     if (cnt->locate_motion_mode == LOCATE_ON) {
-
         if (cnt->locate_motion_style == LOCATE_BOX) {
             alg_draw_location(location, imgs, imgs->width, img->image, LOCATE_BOX,
-                              LOCATE_BOTH, cnt->process_thisframe);
+                              LOCATE_BOTH, cnt->process_thisframe, 0);
         } else if (cnt->locate_motion_style == LOCATE_REDBOX) {
             alg_draw_red_location(location, imgs, imgs->width, img->image, LOCATE_REDBOX,
-                                  LOCATE_BOTH, cnt->process_thisframe);
+                                  LOCATE_BOTH, cnt->process_thisframe, 0);
         } else if (cnt->locate_motion_style == LOCATE_CROSS) {
             alg_draw_location(location, imgs, imgs->width, img->image, LOCATE_CROSS, 
-                              LOCATE_BOTH, cnt->process_thisframe);
+                              LOCATE_BOTH, cnt->process_thisframe, img->total_labels);
         } else if (cnt->locate_motion_style == LOCATE_REDCROSS) {
             alg_draw_red_location(location, imgs, imgs->width, img->image, LOCATE_REDCROSS, 
-                                  LOCATE_BOTH, cnt->process_thisframe);
+                                  LOCATE_BOTH, cnt->process_thisframe, img->total_labels);
         }    
     }
 
@@ -729,7 +728,6 @@ static int motion_init(struct context *cnt)
     cnt->imgs.smartmask_final = mymalloc(cnt->imgs.motionsize);
     cnt->imgs.smartmask_buffer = mymalloc(cnt->imgs.motionsize * sizeof(cnt->imgs.smartmask_buffer));
     cnt->imgs.labels = mymalloc(cnt->imgs.motionsize * sizeof(cnt->imgs.labels));
-    cnt->imgs.labelsize = mymalloc((cnt->imgs.motionsize/2+1) * sizeof(cnt->imgs.labelsize));
 
     /* Set output picture type */
     if (!strcmp(cnt->conf.picture_type, "ppm"))
@@ -990,11 +988,6 @@ static void motion_cleanup(struct context *cnt)
     if (cnt->imgs.labels) {
         free(cnt->imgs.labels);
         cnt->imgs.labels = NULL;
-    }
-
-    if (cnt->imgs.labelsize) {
-        free(cnt->imgs.labelsize);
-        cnt->imgs.labelsize = NULL;
     }
 
     if (cnt->imgs.smartmask) {
@@ -1565,8 +1558,8 @@ static void *motion_loop(void *arg)
                     if (cnt->conf.despeckle_filter && cnt->current_image->diffs > 0) {
                         olddiffs = cnt->current_image->diffs;
                         cnt->current_image->diffs = alg_despeckle(cnt, olddiffs);
-                    } else if (cnt->imgs.labelsize_max) {
-                        cnt->imgs.labelsize_max = 0; /* Disable labeling if enabled */
+                    } else if (cnt->current_image->total_labels) {
+                        cnt->current_image->total_labels = 0; /* Disable labeling if enabled */
                     }
 
                 } else if (!cnt->conf.setup_mode) {
@@ -1630,7 +1623,7 @@ static void *motion_loop(void *arg)
                  * for adding the locate rectangle 
                  */
                 if (cnt->current_image->diffs > cnt->threshold)
-                    alg_locate_center_size(&cnt->imgs, cnt->imgs.width, cnt->imgs.height, &cnt->current_image->location);
+                    alg_locate_center_size(&cnt->imgs, cnt->imgs.width, cnt->imgs.height, &cnt->current_image->location, cnt->current_image->total_labels);
 
                 /* 
                  * Update reference frame. 
@@ -1676,9 +1669,10 @@ static void *motion_loop(void *arg)
                 overlay_smartmask(cnt, cnt->imgs.out);
 
             /* Largest labels overlay */
-            if (cnt->imgs.largest_label && (cnt->conf.motion_img || cnt->conf.ffmpeg_output_debug || 
-                cnt->conf.setup_mode))
+            if (cnt->current_image->total_labels && (cnt->conf.motion_img || cnt->conf.ffmpeg_output_debug || 
+                cnt->conf.setup_mode)) {
                 overlay_largest_label(cnt, cnt->imgs.out);
+        }
 
             /* Fixed mask overlay */
             if (cnt->imgs.mask && (cnt->conf.motion_img || cnt->conf.ffmpeg_output_debug || 

@@ -21,11 +21,14 @@
  * alg_locate_center_size 
  *      Locates the center and size of the movement. 
  */
-void alg_locate_center_size(struct images *imgs, int width, int height, struct coord *cent)
+void alg_locate_center_size(struct images *imgs, int width, int height, struct coord *cent, int tot_labels)
 {
     unsigned char *out = imgs->out;
     int *labels = imgs->labels;
-    int x, y, centc = 0, xdist = 0, ydist = 0;
+    int x, y, l, centc = 0, xdist = 0, ydist = 0;
+    struct label_center (*labels_all)[MAX_LABELS] = &imgs->labels_all;
+
+    memset(*labels_all, 0, sizeof(*labels_all));
 
     cent->x = 0;
     cent->y = 0;
@@ -34,19 +37,34 @@ void alg_locate_center_size(struct images *imgs, int width, int height, struct c
     cent->minx = width;
     cent->miny = height;
 
-    /* If Labeling enabled - locate center of largest labelgroup. */
-    if (imgs->labelsize_max) {
+    /* If Labeling enabled - locate center of all labels. */
+    if (tot_labels) {
         /* Locate largest labelgroup */
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
-                if (*(labels++) & 32768) {
-                    cent->x += x;
-                    cent->y += y;
-                    centc++;
+                /* Check for valid label */
+                if (*labels & 32768) {
+                    /* Find the label number */
+                    int label_pos = (*labels ^ 32768);
+                    (*labels_all)[label_pos].x += x;
+                    (*labels_all)[label_pos].y += y;
+                    (*labels_all)[label_pos].c++;
                 }
+                labels++;
             }
         }
 
+        for(l = 0; l < tot_labels; l++) {
+            if((*labels_all)[l].c) {
+                (*labels_all)[l].x = (*labels_all)[l].x / (*labels_all)[l].c;
+                (*labels_all)[l].y = (*labels_all)[l].y / (*labels_all)[l].c;
+            }
+        }
+        //Set center to largest label, for box drawing.
+        if((*labels_all)[imgs->largest_label].c) {
+            cent->x = (*labels_all)[imgs->largest_label].x;
+            cent->y = (*labels_all)[imgs->largest_label].y;
+        }
     } else {
         /* Locate movement */
         for (y = 0; y < height; y++) {
@@ -58,13 +76,13 @@ void alg_locate_center_size(struct images *imgs, int width, int height, struct c
                 }
             }
         }
-
+        if (centc) {
+            cent->x = cent->x / centc;
+            cent->y = cent->y / centc;
+        }
     }
 
-    if (centc) {
-        cent->x = cent->x / centc;
-        cent->y = cent->y / centc;
-    }
+
     
     /* Now we find the size of the Motion. */
 
@@ -74,10 +92,10 @@ void alg_locate_center_size(struct images *imgs, int width, int height, struct c
     out = imgs->out;
 
     /* If Labeling then we find the area around largest labelgroup instead. */
-    if (imgs->labelsize_max) {
+    if (tot_labels) {
         for (y = 0; y < height; y++) {
             for (x = 0; x < width; x++) {
-                if (*(labels++) & 32768) {
+                if (*(labels++) == 32768 + imgs->largest_label) {
                     if (x > cent->x)
                         xdist += x - cent->x;
                     else if (x < cent->x)
@@ -170,7 +188,7 @@ void alg_locate_center_size(struct images *imgs, int width, int height, struct c
  *      Draws a box around the movement. 
  */
 void alg_draw_location(struct coord *cent, struct images *imgs, int width, unsigned char *new,
-                       int style, int mode, int process_thisframe)
+                       int style, int mode, int process_thisframe, int tot_labels)
 {
     unsigned char *out = imgs->out;
     int x, y;
@@ -218,17 +236,25 @@ void alg_draw_location(struct coord *cent, struct images *imgs, int width, unsig
             new[width_maxx_y] =~new[width_maxx_y];
         }
     } else if (style == LOCATE_CROSS) { /* Draw a cross on normal images. */
-        int centy = cent->y * width;
+        /* Draw cross on each label */
+        int l;
+        for(l = 0; l < tot_labels; l++) {
+            int centxx = imgs->labels_all[l].x;
+            int centyy = imgs->labels_all[l].y;
+            int centy = centyy * width;
 
-        for (x = cent->x - 10;  x <= cent->x + 10; x++) {
-            new[centy + x] =~new[centy + x];
-            out[centy + x] =~out[centy + x];
+            for (x = centxx - 10;  x <= centxx + 10; x++) {
+                int tmp = centy + x;
+                new[tmp] =~new[tmp];
+                out[tmp] =~out[tmp];
+            }
+
+            for (y = centyy - 10; y <= centyy + 10; y++) {
+                int tmp = centxx + y * width;
+                new[tmp] =~new[tmp];
+                out[tmp] =~out[tmp];
+            } 
         }
-
-        for (y = cent->y - 10; y <= cent->y + 10; y++) {
-            new[cent->x + y * width] =~new[cent->x + y * width];
-            out[cent->x + y * width] =~out[cent->x + y * width];
-        }       
     }
 }
 
@@ -238,7 +264,7 @@ void alg_draw_location(struct coord *cent, struct images *imgs, int width, unsig
  *          Draws a RED box around the movement.
  */
 void alg_draw_red_location(struct coord *cent, struct images *imgs, int width, unsigned char *new,
-                           int style, int mode, int process_thisframe)
+                           int style, int mode, int process_thisframe, int tot_labels)
 {
     unsigned char *out = imgs->out;
     unsigned char *new_u, *new_v;
@@ -248,7 +274,6 @@ void alg_draw_red_location(struct coord *cent, struct images *imgs, int width, u
     cblock = imgs->motionsize / 4;
     x = imgs->motionsize;
     v = x + cblock;
-    out = imgs->out;
     new_u = new + x;
     new_v = new + v;
 
@@ -328,20 +353,27 @@ void alg_draw_red_location(struct coord *cent, struct images *imgs, int width, u
             new[width_maxx_y + width + 1] = 128;
         }
     } else if (style == LOCATE_REDCROSS) { /* Draw a red cross on normal images. */
-        int cwidth_maxy = cwidth * (cent->y / 2);
-        
-        for (x = cent->x - 10; x <= cent->x + 10; x += 2) {
-            int cwidth_maxy_x = x / 2 + cwidth_maxy;
 
-            new_u[cwidth_maxy_x] = 128;
-            new_v[cwidth_maxy_x] = 255;
-        }
+        int l;
+        for(l = 0; l < tot_labels; l++) {
 
-        for (y = cent->y - 10; y <= cent->y + 10; y += 2) {
-            int cwidth_minx_y = (cent->x / 2) + (y / 2) * cwidth; 
-            
-            new_u[cwidth_minx_y] = 128;
-            new_v[cwidth_minx_y] = 255;
+            int centxx = imgs->labels_all[l].x;
+            int centyy = imgs->labels_all[l].y;
+            int cwidth_maxy = cwidth * (centyy / 2);
+
+            for (x = centxx - 10; x <= centxx + 10; x += 2) {
+                int cwidth_maxy_x = x / 2 + cwidth_maxy;
+
+                new_u[cwidth_maxy_x] = 128;
+                new_v[cwidth_maxy_x] = 255;
+            }
+
+            for (y = centyy - 10; y <= centyy + 10; y += 2) {
+                int cwidth_minx_y = (centxx / 2) + (y / 2) * cwidth; 
+                
+                new_u[cwidth_minx_y] = 128;
+                new_v[cwidth_minx_y] = 255;
+            }
         }
     }
 }
@@ -525,13 +557,12 @@ static int alg_labeling(struct context *cnt)
     int width = imgs->width;
     int height = imgs->height;
     int labelsize = 0;
-    int current_label = 2;
+    int mark_as_label = 2; /* 0 = no label, 1 = no label and no motion, > 1 = label id*/
+    int *tot_labels = &cnt->current_image->total_labels;
+    int diffs = 0;
 
-    cnt->current_image->total_labels = 0;
+    *tot_labels = 0;
     imgs->labelsize_max = 0;
-    /* ALL labels above threshold are counted as labelgroup. */
-    imgs->labelgroup_max = 0;
-    imgs->labels_above = 0;
 
     /* Init: 0 means no label set / not checked. */
     memset(labels, 0, width * height * sizeof(labels));
@@ -549,38 +580,36 @@ static int alg_labeling(struct context *cnt)
             if (labels[pixelpos] > 0)
                 continue;
 
-            labelsize = iflood(ix, iy, width, height, out, labels, current_label, 0);
+            labelsize = iflood(ix, iy, width, height, out, labels, mark_as_label, 0);
             
-            if (labelsize > 0) {
-                MOTION_LOG(DBG, TYPE_ALL, NO_ERRNO, "%s: Label: %i (%i) Size: %i (%i,%i)", 
-                            current_label, cnt->current_image->total_labels, 
-                           labelsize, ix, iy);
+            if (labelsize > cnt->threshold) {
+                /* Only care about MAX_LABELS, NB: this is MAX_LABELS first, not MAX_LABELS best. */
+                /* but with large enough number, probalby doesn't matter */
+                if (*tot_labels == MAX_LABELS)
+                    goto SKIP_REM_LABELS;
 
                 /* Label above threshold? Mark it again (add 32768 to labelnumber). */
-                if (labelsize > cnt->threshold) {
-                    labelsize = iflood(ix, iy, width, height, out, labels, current_label + 32768, current_label);
-                    imgs->labelgroup_max += labelsize;
-                    imgs->labels_above++;
-                }
-                
+                labelsize = iflood(ix, iy, width, height, out, labels, *tot_labels + 32768, mark_as_label);
+                diffs += labelsize;
+            
                 if (imgs->labelsize_max < labelsize) {
                     imgs->labelsize_max = labelsize;
-                    imgs->largest_label = current_label;
+                    imgs->largest_label = *tot_labels;
                 }
-                
-                cnt->current_image->total_labels++;
-                current_label++;
+                (*tot_labels)++;
             }
+            mark_as_label++;
         }
         pixelpos++; /* Compensate for ix < width - 1 */
     }
 
-    MOTION_LOG(DBG, TYPE_ALL, NO_ERRNO, "%s: %i Labels found. Largest connected Area: %i Pixel(s). "
-               "Largest Label: %i", imgs->largest_label, imgs->labelsize_max, 
-               cnt->current_image->total_labels);
+    SKIP_REM_LABELS:
+
+    MOTION_LOG(DBG, TYPE_ALL, NO_ERRNO, "%s: %i Valid labels found. Largest area: %i Pixel(s). "
+               "Largest Label: %i", *tot_labels, imgs->labelsize_max, imgs->largest_label);
     
     /* Return group of significant labels. */
-    return imgs->labelgroup_max;
+    return diffs;
 }
 
 /** 
