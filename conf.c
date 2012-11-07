@@ -211,6 +211,14 @@ config_param config_params[] = {
     print_bool
     },
     {
+    "disable_detection",    
+    "# Disable motion detection (default: off)",
+    0,
+    CONF_OFFSET(disable_detection),
+    copy_bool,
+    print_bool
+    },
+    {
     "logfile",
     "# Use a file to save logs messages, if not defined stderr and syslog is used. (default: not defined)",
     1,
@@ -1581,7 +1589,7 @@ static void conf_cmdline(struct context *cnt, int thread)
                 strcpy(cnt->log_file, optarg);
             break;
         case 'm':
-            cnt->pause = 1;
+            conf->disable_detection = 1;
             break;    
         case 'h':
         case '?':

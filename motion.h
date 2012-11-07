@@ -394,7 +394,6 @@ struct context {
     unsigned int lastrate;
     unsigned int startup_frames;
     unsigned int moved;
-    unsigned int pause;
     int missing_frame_counter;               /* counts failed attempts to fetch picture frame from camera */
     unsigned int lost_connection;    
 

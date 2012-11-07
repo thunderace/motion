@@ -23,6 +23,7 @@ struct config {
     char *log_type_str;
     char *log_file;
     int setup_mode;
+    int disable_detection;
     int width;
     int height;
     int quality;

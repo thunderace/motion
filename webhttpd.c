@@ -1123,12 +1123,12 @@ static unsigned int detection(char *pointer, char *res, unsigned int length_uri,
                 send_template_ini_client(client_socket, ini_template);
                 sprintf(res, "<a href=/%hu/detection>&lt;&ndash; back</a><br><br><b>Thread %hu</b>"
                              " Detection status %s\n", thread, thread,
-                             (!cnt[thread]->running)? "NOT RUNNING": (cnt[thread]->pause)? "PAUSE":"ACTIVE");
+                             (!cnt[thread]->running)? "NOT RUNNING": (cnt[thread]->conf.disable_detection)? "PAUSE":"ACTIVE");
                 send_template(client_socket, res);
                 send_template_end_client(client_socket);
             } else {
                 sprintf(res, "Thread %hu Detection status %s\n", thread,
-                             (!cnt[thread]->running)? "NOT RUNNING": (cnt[thread]->pause)? "PAUSE":"ACTIVE");
+                             (!cnt[thread]->running)? "NOT RUNNING": (cnt[thread]->conf.disable_detection)? "PAUSE":"ACTIVE");
                 send_template_ini_client_raw(client_socket);
                 send_template_raw(client_socket, res);
             }
@@ -1147,10 +1147,10 @@ static unsigned int detection(char *pointer, char *res, unsigned int length_uri,
 
             if (thread == 0) {
                 do {
-                    cnt[i]->pause = 0;
+                    cnt[i]->conf.disable_detection = 0;
                 } while (cnt[++i]);
             } else {
-                cnt[thread]->pause = 0;
+                cnt[thread]->conf.disable_detection = 0;
             }
 
             if (cnt[0]->conf.webcontrol_html_output) {
@@ -1179,10 +1179,10 @@ static unsigned int detection(char *pointer, char *res, unsigned int length_uri,
 
             if (thread == 0) {
                 do {
-                    cnt[i]->pause = 1;
+                    cnt[i]->conf.disable_detection = 1;
                 } while (cnt[++i]);
             } else {
-                cnt[thread]->pause = 1;
+                cnt[thread]->conf.disable_detection = 1;
             }
 
             if (cnt[0]->conf.webcontrol_html_output) {

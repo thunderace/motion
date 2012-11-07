@@ -689,7 +689,7 @@ static int motion_init(struct context *cnt)
     cnt->makemovie = 0;
 
     MOTION_LOG(NTC, TYPE_ALL, NO_ERRNO, "%s: Thread %d started , motion detection %s", 
-               (unsigned long)pthread_getspecific(tls_key_threadnr), cnt->pause ? "Disabled":"Enabled");
+               (unsigned long)pthread_getspecific(tls_key_threadnr), cnt->conf.disable_detection ? "Disabled":"Enabled");
 
     if (!cnt->conf.filepath)
         cnt->conf.filepath = mystrdup(".");
@@ -1501,7 +1501,7 @@ static void *motion_loop(void *arg)
              * is called.
              */
             if (cnt->process_thisframe) {
-                if (cnt->threshold && !cnt->pause) {
+                if (cnt->threshold && !cnt->conf.disable_detection) {
                     /* 
                      * If we've already detected motion and we want to see if there's
                      * still motion, don't bother trying the fast one first. IF there's
@@ -1697,7 +1697,7 @@ static void *motion_loop(void *arg)
             if (cnt->conf.text_changes) {
                 char tmp[15];
 
-                if (!cnt->pause)
+                if (!cnt->conf.disable_detection)
                     sprintf(tmp, "%d", cnt->current_image->diffs);
                 else
                     sprintf(tmp, "-");
