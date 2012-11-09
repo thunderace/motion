@@ -897,13 +897,8 @@ int alg_despeckle(struct context *cnt, int olddiffs)
     }
 
     /* If conf.despeckle_filter contains any valid action EeDdl */
-    if (done) {
-        if (done != 2) 
-            cnt->imgs.labelsize_max = 0; // Disable Labeling
-        return diffs;
-    } else {
-        cnt->imgs.labelsize_max = 0; // Disable Labeling
-    }    
+    if (done)
+        return diffs; 
     
     return olddiffs;
 }

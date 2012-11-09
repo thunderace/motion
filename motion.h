@@ -282,7 +282,7 @@ int draw_text(unsigned char *image, unsigned int startx, unsigned int starty, un
 int initialize_chars(void);
 
 
-#define MAX_LABELS   250
+#define MAX_LABELS   50
 
 /* Stores each labels center x, y and point count. */
 struct label_center{

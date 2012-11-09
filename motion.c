@@ -1558,8 +1558,6 @@ static void *motion_loop(void *arg)
                     if (cnt->conf.despeckle_filter && cnt->current_image->diffs > 0) {
                         olddiffs = cnt->current_image->diffs;
                         cnt->current_image->diffs = alg_despeckle(cnt, olddiffs);
-                    } else if (cnt->current_image->total_labels) {
-                        cnt->current_image->total_labels = 0; /* Disable labeling if enabled */
                     }
 
                 } else if (!cnt->conf.setup_mode) {
