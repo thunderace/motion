@@ -931,7 +931,7 @@ static unsigned int action(char *pointer, char *res, unsigned int length_uri,
     struct context **cnt = userdata;
     unsigned int i = 0;
 
-    warningkill = sscanf(pointer, "%255[a-z]" , command);
+    warningkill = sscanf(pointer, "%255[a-z?]" , command);
     if (!strcmp(command, "makemovie")) {
         pointer = pointer + 9;
         length_uri = length_uri - 9;
@@ -965,16 +965,23 @@ static unsigned int action(char *pointer, char *res, unsigned int length_uri,
         }
     } else if (!strncmp(command, "snapshot", 8)) {
         pointer = pointer + 8;
-        length_uri = length_uri - 8;
+		length_uri = length_uri - 8;
+		MOTION_LOG(NTC, TYPE_STREAM, NO_ERRNO, "%s: snapshot 1 %s", pointer);
 		if (length_uri > 1 && !strncmp(pointer, "?", 1)) { //we have a snapshot filename parameter
 			pointer = pointer + 1;
 			length_uri = length_uri - 1;
+			MOTION_LOG(NTC, TYPE_STREAM, NO_ERRNO, "%s: snapshot 2 %s", pointer);
             if (thread == 0) {
-                while (cnt[++i])
-                    strncpy(cnt[i]->http_param, pointer, length_uri);
+                while (cnt[++i]) {
+                    strcpy(cnt[i]->http_param, pointer);
+					cnt[i]->snapshot_with_filename = 1;
+				}
             } else {
-                strncpy(cnt[thread]->http_param, pointer,  length_uri);
-            }
+                strcpy(cnt[thread]->http_param, pointer);
+				cnt[thread]->snapshot_with_filename = 1;
+			}
+            strcpy(cnt[thread]->http_param, pointer);
+			cnt[thread]->snapshot_with_filename = 1;
 			length_uri = 0;
 		}
         if (length_uri == 0) {

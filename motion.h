@@ -372,6 +372,7 @@ struct context {
 
     /* Commands to the motion thread */
     volatile unsigned int snapshot;    /* Make a snapshot */
+    volatile unsigned int snapshot_with_filename;    /* Make a snapshot */
     volatile unsigned int makemovie;   /* End a movie */
     volatile unsigned int finish;      /* End the thread */
     volatile unsigned int restart;     /* Restart the thread when it ends */
@@ -444,7 +445,6 @@ struct context {
     char motionfilename[PATH_MAX];
 #endif
 	char http_param[PATH_MAX];
-
 };
 
 extern pthread_mutex_t global_lock;

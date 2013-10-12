@@ -350,7 +350,7 @@ static void event_image_snapshot(struct context *cnt, int type ATTRIBUTE_UNUSED,
             void *dummy2 ATTRIBUTE_UNUSED, struct tm *currenttime_tm)
 {
     char fullfilename[PATH_MAX];
-	if (dummy1 != NULL) {
+	if (cnt->snapshot_with_filename == 1) {
 		// we have a snapshot filename param : use it!!
         snprintf(fullfilename, PATH_MAX, "%s/%s.%s", cnt->conf.filepath, dummy1, imageext(cnt));
         remove(fullfilename);
@@ -394,6 +394,7 @@ static void event_image_snapshot(struct context *cnt, int type ATTRIBUTE_UNUSED,
 		}
 	}
     cnt->snapshot = 0;
+	cnt->snapshot_with_filename = 0;
 }
 
 static void event_camera_lost(struct context *cnt, int type ATTRIBUTE_UNUSED,
