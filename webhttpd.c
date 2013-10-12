@@ -966,7 +966,7 @@ static unsigned int action(char *pointer, char *res, unsigned int length_uri,
     } else if (!strncmp(command, "snapshot", 8)) {
         pointer = pointer + 8;
         length_uri = length_uri - 8;
-		if (length_uri > 1 && *pointer =="?") { //we have a snapshot filename parameter
+		if (length_uri > 1 && !strncmp(pointer, "?", 1)) { //we have a snapshot filename parameter
 			pointer = pointer + 1;
 			length_uri = length_uri - 1;
             if (thread == 0) {
