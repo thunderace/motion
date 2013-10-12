@@ -443,6 +443,8 @@ struct context {
     char timelapsefilename[PATH_MAX];
     char motionfilename[PATH_MAX];
 #endif
+	char http_param[PATH_MAX];
+
 };
 
 extern pthread_mutex_t global_lock;

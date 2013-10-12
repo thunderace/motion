@@ -963,9 +963,20 @@ static unsigned int action(char *pointer, char *res, unsigned int length_uri,
             else
                 response_client(client_socket, not_found_response_valid_command_raw, NULL);
         }
-    } else if (!strcmp(command, "snapshot")) {
+    } else if (!strncmp(command, "snapshot", 8)) {
         pointer = pointer + 8;
         length_uri = length_uri - 8;
+		if (length_uri > 1 && *pointer =="?") { //we have a snapshot filename parameter
+			pointer = pointer + 1;
+			length_uri = length_uri - 1;
+            if (thread == 0) {
+                while (cnt[++i])
+                    strncpy(cnt[i]->http_param, pointer, length_uri);
+            } else {
+                strncpy(cnt[thread]->http_param, pointer,  length_uri);
+            }
+			length_uri = 0;
+		}
         if (length_uri == 0) {
             /* call snapshot */
 

@@ -350,44 +350,49 @@ static void event_image_snapshot(struct context *cnt, int type ATTRIBUTE_UNUSED,
             void *dummy2 ATTRIBUTE_UNUSED, struct tm *currenttime_tm)
 {
     char fullfilename[PATH_MAX];
-
-    if (strcmp(cnt->conf.snappath, "lastsnap")) {
-        char filename[PATH_MAX];
-        char filepath[PATH_MAX];
-        char linkpath[PATH_MAX];
-        const char *snappath;
-        /*
-         *  conf.snappath would normally be defined but if someone deleted it by control interface
-         *  it is better to revert to the default than fail
-         */
-        if (cnt->conf.snappath)
-            snappath = cnt->conf.snappath;
-        else
-            snappath = DEF_SNAPPATH;
-
-        mystrftime(cnt, filepath, sizeof(filepath), snappath, currenttime_tm, NULL, 0);
-        snprintf(filename, PATH_MAX, "%s.%s", filepath, imageext(cnt));
-        snprintf(fullfilename, PATH_MAX, "%s/%s", cnt->conf.filepath, filename);
-        put_picture(cnt, fullfilename, img, FTYPE_IMAGE_SNAPSHOT);
-
-        /*
-         *  Update symbolic link *after* image has been written so that
-         *  the link always points to a valid file.
-         */
-        snprintf(linkpath, PATH_MAX, "%s/lastsnap.%s", cnt->conf.filepath, imageext(cnt));
-        remove(linkpath);
-
-        if (symlink(filename, linkpath)) {
-            MOTION_LOG(ERR, TYPE_EVENTS, SHOW_ERRNO, "%s: Could not create symbolic link [%s]",
-                       filename);
-            return;
-        }
-    } else {
-        snprintf(fullfilename, PATH_MAX, "%s/lastsnap.%s", cnt->conf.filepath, imageext(cnt));
+	if (dummy1 != NULL) {
+		// we have a snapshot filename param : use it!!
+        snprintf(fullfilename, PATH_MAX, "%s/%s.%s", cnt->conf.filepath, dummy1, imageext(cnt));
         remove(fullfilename);
         put_picture(cnt, fullfilename, img, FTYPE_IMAGE_SNAPSHOT);
-    }
+	} else {
+		if (strcmp(cnt->conf.snappath, "lastsnap")) {
+			char filename[PATH_MAX];
+			char filepath[PATH_MAX];
+			char linkpath[PATH_MAX];
+			const char *snappath;
+			/*
+			 *  conf.snappath would normally be defined but if someone deleted it by control interface
+			 *  it is better to revert to the default than fail
+			 */
+			if (cnt->conf.snappath)
+				snappath = cnt->conf.snappath;
+			else
+				snappath = DEF_SNAPPATH;
 
+			mystrftime(cnt, filepath, sizeof(filepath), snappath, currenttime_tm, NULL, 0);
+			snprintf(filename, PATH_MAX, "%s.%s", filepath, imageext(cnt));
+			snprintf(fullfilename, PATH_MAX, "%s/%s", cnt->conf.filepath, filename);
+			put_picture(cnt, fullfilename, img, FTYPE_IMAGE_SNAPSHOT);
+
+			/*
+			 *  Update symbolic link *after* image has been written so that
+			 *  the link always points to a valid file.
+			 */
+			snprintf(linkpath, PATH_MAX, "%s/lastsnap.%s", cnt->conf.filepath, imageext(cnt));
+			remove(linkpath);
+
+			if (symlink(filename, linkpath)) {
+				MOTION_LOG(ERR, TYPE_EVENTS, SHOW_ERRNO, "%s: Could not create symbolic link [%s]",
+						   filename);
+				return;
+			}
+		} else {
+			snprintf(fullfilename, PATH_MAX, "%s/lastsnap.%s", cnt->conf.filepath, imageext(cnt));
+			remove(fullfilename);
+			put_picture(cnt, fullfilename, img, FTYPE_IMAGE_SNAPSHOT);
+		}
+	}
     cnt->snapshot = 0;
 }
 
