@@ -2178,17 +2178,28 @@ static unsigned int handle_get(int client_socket, const char *url, void *userdat
                     /* /thread_number/ requested */
                     if (cnt[0]->conf.webcontrol_html_output) {
                         send_template_ini_client(client_socket, ini_template);
-                        sprintf(res, "<a href=/>&lt;&ndash; back</a><br><br>\n<b>Thread %hd</b><br>\n"
-                                     "<a href='/%hd/config'>config</a><br>\n"
-                                     "<a href='/%hd/action'>action</a><br>\n"
-                                     "<a href='/%hd/detection'>detection</a><br>\n"
-                                     "<a href='/%hd/track'>track</a><br>\n",
-                                     thread, thread, thread, thread, thread);
+                       	sprintf(res, "<a href=/>&lt;&ndash; back</a><br><br>\n<b>Thread %hd</b><br>\n"
+                       				 "<a href='/%hd/config'>config</a><br>\n"
+                                	 "<a href='/%hd/action'>action</a><br>\n", 
+                                	 thread, thread, thread);
+                        if(!cnt[0]->conf.disable_detection) {
+                        	sprintf(res, "%s<a href='/%hd/detection'>detection</a><br>\n", res, thread);
+                        }
+                        
+                        if(cnt[thread]->track.type != 0) {
+                        	sprintf(res, "%s<a href='/%hd/track'>track</a><br>\n", res, thread);
+                        }
                         send_template(client_socket, res);
                         send_template_end_client(client_socket);
                     } else {
                         send_template_ini_client_raw(client_socket);
-                        sprintf(res, "Thread %hd\nconfig\naction\ndetection\ntrack\n", thread);
+                        sprintf(res, "Thread %hd\nconfig\naction\n", thread);
+                        if(!cnt[0]->conf.disable_detection) {
+                        	strcat(res, "detection\n");
+                        }
+                        if(cnt[thread]->track.type != 0) {
+                        	strcat(res, "ntrack\n");
+                        }
                         send_template_raw(client_socket, res);
                     }
                 }
