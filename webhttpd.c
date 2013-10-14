@@ -501,6 +501,39 @@ static unsigned int config(char *pointer, char *res, unsigned int length_uri,
             else
                 response_client(client_socket, not_found_response_valid_command_raw, NULL);
         }
+    } else if (!strcmp(command, "json")) {
+        pointer = pointer + 4;
+        length_uri = length_uri - 4;
+        if (length_uri == 0) {
+            const char *value = NULL;
+            char *value_clean = NULL;
+            /*call list*/
+            send_template_ini_client_raw(client_socket);
+            sprintf(res, "{\"Motion\":\"json\""); // dummy object so we can use comma in loop.
+            send_template_raw(client_socket, res);
+            for (i=0; config_params[i].param_name != NULL; i++) {
+                value = config_params[i].print(cnt, NULL, i, thread);
+                if (value == NULL)
+                    value = config_params[i].print(cnt, NULL, i, 0);
+                /* Escape double quotes in json string */
+                if(value && strchr(value, '"')) {
+                    value_clean = replace(value, "\"", "\\\"");
+                    sprintf(res, ",\"%s\":\"%s\"", config_params[i].param_name, value_clean);
+                    free(value_clean);
+                } else {
+                    sprintf(res, ",\"%s\":\"%s\"", config_params[i].param_name, value);
+                }
+                send_template_raw(client_socket, res);
+            }
+            res = "}";
+            send_template_raw(client_socket, res);
+        } else {
+            /*error*/
+            if (cnt[0]->conf.webcontrol_html_output)
+                response_client(client_socket, not_found_response_valid_command, NULL);
+            else
+                response_client(client_socket, not_found_response_valid_command_raw, NULL);
+        }        
     } else if (!strcmp(command, "set")) {
         /* set?param_name=value */
         pointer = pointer + 3;

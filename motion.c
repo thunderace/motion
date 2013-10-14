@@ -1644,7 +1644,9 @@ static void *motion_loop(void *arg)
 
                     MOTION_LOG(INF, TYPE_ALL, NO_ERRNO, "%s: micro-lightswitch!"); 
                 } else {
-                    alg_update_reference_frame(cnt, UPDATE_REF_FRAME);
+                	if (cnt->detecting_motion || cnt->shots == 0) {
+                     	alg_update_reference_frame(cnt, UPDATE_REF_FRAME);
+                 	}                	
                 }
 
                 previous_diffs = cnt->current_image->diffs;
