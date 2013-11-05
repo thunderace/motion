@@ -1,3 +1,5 @@
+Personal version with a param for the web snapshot command. this param is the name of the snapshot.
+
 Motion up to version 3.1.8 was created and maintained by Jeroen Vreeken.
 Versions 3.1.9-3.1.12 was maintained by Kenneth Lavrsen (http://www.lavrsen.dk/)
 and Folkert van Heusden (http://www.vanheusden.com/).
