@@ -10,6 +10,7 @@
 /* Common stuff: */
 #include "rotate.h"     /* already includes motion.h */
 #include "video.h"
+#include <libv4l1-videodev.h>
 
 #if defined(HAVE_LINUX_VIDEODEV_H) && !defined(WITHOUT_V4L)
 

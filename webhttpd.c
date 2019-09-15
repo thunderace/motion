@@ -2101,13 +2101,14 @@ static unsigned int handle_get(int client_socket, const char *url, void *userdat
                                              "<a href=/%hd/action/makemovie>makemovie</a><br>\n"
                                              "<a href=/%hd/action/snapshot>snapshot</a><br>\n"
                                              "<a href=/%hd/action/restart>restart</a><br>\n"
+                                             "<a href=/%hd/action/getThreadID>getThreadID</a><br>\n"
                                              "<a href=/%hd/action/quit>quit</a><br>\n",
                                              thread, thread, thread, thread, thread, thread);
                                 send_template(client_socket, res);
                                 send_template_end_client(client_socket);
                             } else {
                                 send_template_ini_client_raw(client_socket);
-                                sprintf(res, "Thread %hd\nmakemovie\nsnapshot\nrestart\nquit\n", thread);
+                                sprintf(res, "Thread %hd\nmakemovie\nsnapshot\nrestart\ngetThreadID\nquit\n", thread);
                                 send_template_raw(client_socket, res);
                             }
                         } else if ((slash == '/') && (length_uri > 4)) {

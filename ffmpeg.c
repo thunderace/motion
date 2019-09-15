@@ -9,11 +9,13 @@
  * and apiexample.c from the FFmpeg distribution.
  *
  */
+#include <libavcodec/avcodec.h>
 
 #ifdef HAVE_FFMPEG
 
 #include "ffmpeg.h"
 #include "motion.h"
+
 
 #if LIBAVCODEC_BUILD > 4680
 /*

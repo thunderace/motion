@@ -73,11 +73,11 @@
 #include "motion.h"
 #include "video.h"
 
-#ifdef MOTION_V4L2_OLD
+//#ifdef MOTION_V4L2_OLD
 // Seems that is needed for some system
 #include <linux/time.h>
 #include <linux/videodev2.h>
-#endif
+//#endif
 
 #define u8 unsigned char
 #define u16 unsigned short

@@ -10,6 +10,7 @@
 #include <avformat.h>
 #endif
 
+
 #ifndef AVERROR /* 0.4.8 & 0.4.9-pre1 */
 
 #if EINVAL > 0

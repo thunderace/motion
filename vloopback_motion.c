@@ -12,7 +12,7 @@
 #if defined(HAVE_LINUX_VIDEODEV_H) && (!defined(WITHOUT_V4L)) && (!defined(BSD))
 #include <sys/utsname.h>
 #include <dirent.h>
-
+#include <libv4l1-videodev.h>
 /**
  * v4l_open_vidpipe
  *

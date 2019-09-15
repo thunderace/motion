@@ -4292,6 +4292,12 @@ $as_echo "found in /usr/lib64" >&6; }
 		FFMPEG_OK="found"
 		FFMPEG_LIB="/usr/lib64"
 		FFMPEG_DIR="/usr"
+	elif test -f /usr/lib/x86_64-linux-gnu/libavcodec.a -o -f /usr/lib/x86_64-linux-gnu/libavcodec.so && test -f /usr/lib/x86_64-linux-gnu/libavformat.a -o -f /usr/lib/x86_64-linux-gnu/libavformat.so ; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found in /usr/lib/x86_64-linux-gnu" >&5
+$as_echo "found in /usr/lib/x86_64-linux-gnu" >&6; }
+		FFMPEG_OK="found"
+		FFMPEG_LIB="/usr/lib/x86_64-linux-gnu"
+		FFMPEG_DIR="/usr"
 	elif test -f /usr/lib/libavcodec.a -o -f /usr/lib/libavcodec.so && test -f /usr/lib/libavformat.a -o -f /usr/lib/libavformat.so ; then
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found in /usr/lib" >&5
 $as_echo "found in /usr/lib" >&6; }
