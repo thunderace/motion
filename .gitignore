@@ -1,7 +1,6 @@
 *.log
 .svn/
 *.o
-Makefile
 *.conf
 .depend
 config.h
